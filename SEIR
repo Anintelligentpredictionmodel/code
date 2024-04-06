@@ -1,0 +1,61 @@
+
+
+import numpy as np
+import math
+import matplotlib.pyplot as plt
+from scipy.integrate import odeint
+
+def dySEIDR(y, t, alpha,  gamma, lamda,lamda2):
+    s, e, i,  r = y
+    n = s + e + i  + r
+
+    # print(s, e, i, d, r)
+    ds_dt = - lamda * s * i / n- lamda2  * s * e / n
+    de_dt =  lamda  * s * i / n+lamda2  * s * e / n - alpha * e
+    di_dt = alpha * e - gamma * i
+    dr_dt = gamma * i
+
+    return np.array([ds_dt, de_dt, di_dt, dr_dt])
+
+def draw_SEIDR(ySEIR):
+    # plt.figure(figsize=(16, 9))
+    plt.plot(t, ySEIR[:, 0],linewidth=1.5, marker='o', markevery=25,markersize=5,label='Susceptible',color='b')
+    plt.plot(t, ySEIR[:, 1], linewidth=1.5,marker='*', markevery=25,markersize=7, label='Exposed',color='orange')
+    plt.plot(t, ySEIR[:, 2], linewidth=1.5,marker='d', markevery=25,markersize=5, label='Infected',color='r')
+    plt.plot(t, ySEIR[:, 3], linewidth=1.5,marker='$\clubsuit$', markevery=25,markersize=7, label='Recovered',color='g')
+
+    plt.xticks(range(0, 151, 25))
+    plt.legend(loc='upper right',bbox_to_anchor=(1, 0.94))
+    font2 = {
+        # 'family': 'Times New Roman',
+        'weight': 'normal',
+        'size': 11,
+    }
+    plt.xlabel(r"day", font2, labelpad=10)
+    plt.ylabel("people", font2, labelpad=10)
+
+    plt.savefig("SEIR_11.7.png", dpi=1000, bbox_inches='tight')
+    plt.show()
+
+
+if __name__ == '__main__':
+    number = 1443497378    # 模型总人数
+
+    e = 0               # Exposed 暴露者/潜伏者
+    i = 8938818#11.22开始预测              # Infected 感染者
+    r = 374877          # Recovered 康复者
+    s = number-i-r  # Susceptible 易感人群数量
+
+    alpha = 0.05        # Probability of latent people becoming infected people 潜伏期的人变成感染者的概率
+    # beta  = 0.05        # For susceptible persons, probability of becoming latent after contact with infected persons 对于易感者，与感染者接触后成为潜伏者的可能性
+    gamma = 1/15        # Cure rate of infected persons 感染者的治愈率为治愈周期的倒数：奥米克荣治愈周期为15到20天，我们这里就取1/15
+
+    lamda = 0.8          #日接触率, 患病者每天有效接触的易感者的平均人数
+    lamda2=0.2         # 日接触率2, 潜伏者每天有效接触的易感者的平均人数
+    tEnd =150        # 150天
+    t = np.arange(0, tEnd, 1)
+
+    Y0 = (s, e, i, r)
+    ySEIR = odeint(dySEIDR, Y0, t, args=(alpha, gamma,  lamda,lamda2))
+    # print(ySEIR)
+    draw_SEIDR(ySEIR)
